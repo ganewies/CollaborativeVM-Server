@@ -32,13 +32,8 @@ if (!fs.existsSync('config.toml') || !fs.existsSync('config.json')) {
 	process.exit(1);
 }
 try {
-	if (fs.existsSync('config.toml')) {
-		var configRaw = fs.readFileSync('config.toml').toString();
-		Config = toml.parse(configRaw);
-	} else if (fs.existsSync('config.json')) {
-		var configRaw = fs.readFileSync('config.json').toString();
-		Config = JSON.parse(configRaw);
-	}
+	var configRaw = fs.readFileSync('config.toml').toString();
+	Config = toml.parse(configRaw);
 } catch (e) {
 	logger.error({err: e}, 'Fatal error: Failed to read or parse the config file');
 	process.exit(1);

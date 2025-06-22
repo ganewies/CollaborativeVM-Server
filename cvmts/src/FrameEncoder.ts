@@ -5,13 +5,8 @@ import IConfig from './IConfig';
 import * as cvm from '@cvmts/cvm-rs';
 
 let Config: IConfig;
-if (fs.existsSync('config.toml')) {
-	var configRaw = fs.readFileSync('config.toml').toString();
-	Config = toml.parse(configRaw);
-} else if (fs.existsSync('config.json')) {
-	var configRaw = fs.readFileSync('config.json').toString();
-	Config = JSON.parse(configRaw);
-}
+var configRaw = fs.readFileSync('config.toml').toString();
+Config = toml.parse(configRaw);
 
 let gJpegQuality = Config.collabvm.screenQuality ?? 20;
 
