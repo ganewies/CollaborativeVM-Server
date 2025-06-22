@@ -185,69 +185,77 @@ export class GuacamoleProtocol implements IProtocol {
 			case 'admin':
 				if (decodedElements.length < 2) return false;
 				return this.__processMessage_admin(user, handler, decodedElements);
+
+			case 'audioMute':
+				if (decodedElements.length !== 1) return false;
+				handler.onAudioMute(user);
+				break;
 		}
 
 		return true;
 	}
 
-	// Senders
+	send(user: User, ...args: string[]) {       // :P
+		user.sendMsg(cvm.guacEncode(...args));
+	}
 
+	// Senders
 	sendAuth(user: User, authServer: string): void {
-		user.sendMsg(cvm.guacEncode('auth', authServer));
+		this.send(user, 'auth', authServer);
 	}
 
 	sendNop(user: User): void {
-		user.sendMsg(cvm.guacEncode('nop'));
+		this.send(user, 'nop');
 	}
 
 	sendSync(user: User, now: number): void {
-		user.sendMsg(cvm.guacEncode('sync', now.toString()));
+		this.send(user, 'sync', now.toString());
 	}
 
 	sendCapabilities(user: User, caps: ProtocolUpgradeCapability[]): void {
 		let arr = ['cap', ...caps];
-		user.sendMsg(cvm.guacEncode(...arr));
+		this.send(user, ...arr);
 	}
 
 	sendConnectFailResponse(user: User): void {
-		user.sendMsg(cvm.guacEncode('connect', '0'));
+		this.send(user, 'connect', '0');
 	}
 
 	sendConnectOKResponse(user: User, votes: boolean): void {
-		user.sendMsg(cvm.guacEncode('connect', '1', '1', votes ? '1' : '0', '0'));
+		this.send(user, 'connect', '1', '1', votes ? '1' : '0', '0');
 	}
 
 	sendLoginResponse(user: User, ok: boolean, message: string | undefined): void {
 		if (ok) {
-			user.sendMsg(cvm.guacEncode('login', '1'));
+			this.send(user, 'login', '1');
 			return;
 		} else {
-			user.sendMsg(cvm.guacEncode('login', '0', message!));
+			this.send(user, 'login', '0', message!);
 		}
 	}
 
 	sendAdminLoginResponse(user: User, ok: boolean, modPerms: number | undefined): void {
 		if (ok) {
 			if (modPerms == undefined) {
-				user.sendMsg(cvm.guacEncode('admin', '0', '1'));
+				this.send(user, 'admin', '0', '1');
 			} else {
-				user.sendMsg(cvm.guacEncode('admin', '0', '3', modPerms.toString()));
+				this.send(user, 'admin', '0', '3', modPerms.toString());
 			}
 		} else {
-			user.sendMsg(cvm.guacEncode('admin', '0', '0'));
+			this.send(user, 'admin', '0', '0');
 		}
 	}
 
 	sendAdminMonitorResponse(user: User, output: string): void {
-		user.sendMsg(cvm.guacEncode('admin', '2', output));
+		this.send(user, 'admin', '2', output);
 	}
 
 	sendAdminIPResponse(user: User, username: string, ip: string): void {
-		user.sendMsg(cvm.guacEncode('admin', '19', username, ip));
+		this.send(user, 'admin', '19', username, ip);
 	}
 
 	sendChatMessage(user: User, username: string, message: string): void {
-		user.sendMsg(cvm.guacEncode('chat', username, message));
+		this.send(user, 'chat', username, message);
 	}
 
 	sendChatHistoryMessage(user: User, history: ProtocolChatHistory[]): void {
@@ -256,7 +264,7 @@ export class GuacamoleProtocol implements IProtocol {
 			arr.push(a.user, a.msg);
 		}
 
-		user.sendMsg(cvm.guacEncode(...arr));
+		this.send(user, ...arr);
 	}
 
 	sendAddUser(user: User, users: ProtocolAddUser[]): void {
@@ -266,7 +274,7 @@ export class GuacamoleProtocol implements IProtocol {
 			arr.push(user.rank.toString());
 		}
 
-		user.sendMsg(cvm.guacEncode(...arr));
+		this.send(user, ...arr);
 	}
 
 	sendRemUser(user: User, users: string[]): void {
@@ -276,22 +284,22 @@ export class GuacamoleProtocol implements IProtocol {
 			arr.push(user);
 		}
 
-		user.sendMsg(cvm.guacEncode(...arr));
+		this.send(user, ...arr);
 	}
 
 	sendFlag(user: User, flag: ProtocolFlag[]): void {
 		// Basically this does the same as the above manual for of things
 		// but in one line of code
 		let arr = ['flag', ...flag.flatMap((flag) => [flag.username, flag.countryCode])];
-		user.sendMsg(cvm.guacEncode(...arr));
+		this.send(user, ...arr);
 	}
 
 	sendSelfRename(user: User, status: ProtocolRenameStatus, newUsername: string, rank: Rank): void {
-		user.sendMsg(cvm.guacEncode('rename', '0', status.toString(), newUsername));
+		this.send(user, 'rename', '0', status.toString(), newUsername);
 	}
 
 	sendRename(user: User, oldUsername: string, newUsername: string, rank: Rank): void {
-		user.sendMsg(cvm.guacEncode('rename', '1', oldUsername, newUsername));
+		this.send(user, 'rename', '1', oldUsername, newUsername);
 	}
 
 	sendListResponse(user: User, list: ListEntry[]): void {
@@ -302,23 +310,23 @@ export class GuacamoleProtocol implements IProtocol {
 			arr.push(node.thumbnail.toString('base64'));
 		}
 
-		user.sendMsg(cvm.guacEncode(...arr));
+		this.send(user, ...arr);
 	}
 
 	sendVoteStarted(user: User): void {
-		user.sendMsg(cvm.guacEncode('vote', '0'));
+		this.send(user, 'vote', '0');
 	}
 
 	sendVoteStats(user: User, msLeft: number, nrYes: number, nrNo: number): void {
-		user.sendMsg(cvm.guacEncode('vote', '1', msLeft.toString(), nrYes.toString(), nrNo.toString()));
+		this.send(user, 'vote', '1', msLeft.toString(), nrYes.toString(), nrNo.toString());
 	}
 
 	sendVoteEnded(user: User): void {
-		user.sendMsg(cvm.guacEncode('vote', '2'));
+		this.send(user, 'vote', '2');
 	}
 
 	sendVoteCooldown(user: User, ms: number): void {
-		user.sendMsg(cvm.guacEncode('vote', '3', ms.toString()));
+		this.send(user, 'vote', '3', ms.toString());
 	}
 
 	private getTurnQueueBase(turnTime: number, users: string[]): string[] {
@@ -326,21 +334,25 @@ export class GuacamoleProtocol implements IProtocol {
 	}
 
 	sendTurnQueue(user: User, turnTime: number, users: string[]): void {
-		user.sendMsg(cvm.guacEncode(...this.getTurnQueueBase(turnTime, users)));
+		this.send(user, ...this.getTurnQueueBase(turnTime, users));
 	}
 
 	sendTurnQueueWaiting(user: User, turnTime: number, users: string[], waitTime: number): void {
 		let queue = this.getTurnQueueBase(turnTime, users);
 		queue.push(waitTime.toString());
-		user.sendMsg(cvm.guacEncode(...queue));
+		this.send(user, ...queue);
 	}
 
 	sendScreenResize(user: User, width: number, height: number): void {
-		user.sendMsg(cvm.guacEncode('size', '0', width.toString(), height.toString()));
+		this.send(user, 'size', '0', width.toString(), height.toString());
 	}
 
 	sendScreenUpdate(user: User, rect: ScreenRect): void {
-		user.sendMsg(cvm.guacEncode('png', '0', '0', rect.x.toString(), rect.y.toString(), rect.data.toString('base64')));
+		this.send(user, 'png', '0', '0', rect.x.toString(), rect.y.toString(), rect.data.toString('base64'));
 		this.sendSync(user, Date.now());
+	}
+
+	sendAudioOpus(user: User, data: Buffer): void {
+		// dummy definition
 	}
 }

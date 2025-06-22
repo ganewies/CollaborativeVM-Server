@@ -35,6 +35,8 @@ export class User {
 	TurnRateLimit: RateLimiter;
 	VoteRateLimit: RateLimiter;
 
+	audioMute: boolean | undefined;
+
 	private logger = pino({ name: 'CVMTS.User' });
 
 	constructor(socket: NetworkClient, protocol: string, ip: IPData, config: IConfig, username?: string, node?: string) {
@@ -63,8 +65,13 @@ export class User {
 		this.sendNop();
 		if (username) this.username = username;
 		this.rank = 0;
-		this.ChatRateLimit = new RateLimiter(this.Config.collabvm.automute.messages, this.Config.collabvm.automute.seconds);
-		this.ChatRateLimit.on('limit', () => this.mute(false));
+		if (this.Config.collabvm.automute !== false) {
+			this.ChatRateLimit = new RateLimiter(this.Config.collabvm.automute.messages, this.Config.collabvm.automute.seconds);
+			this.ChatRateLimit.on('limit', () => this.mute(false));
+		} else {
+			this.ChatRateLimit = new RateLimiter(5, 5); // default config
+			this.ChatRateLimit.on('limit', () => this.mute(false));
+		}
 		this.RenameRateLimit = new RateLimiter(3, 60);
 		this.RenameRateLimit.on('limit', () => this.closeConnection());
 		this.LoginRateLimit = new RateLimiter(4, 3);
@@ -73,6 +80,7 @@ export class User {
 		this.TurnRateLimit.on('limit', () => this.closeConnection());
 		this.VoteRateLimit = new RateLimiter(3, 3);
 		this.VoteRateLimit.on('limit', () => this.closeConnection());
+		this.audioMute = true;
 	}
 
 	assignGuestName(existingUsers: string[]): string {
@@ -110,7 +118,7 @@ export class User {
 	}
 
 	onChatMsgSent() {
-		if (!this.Config.collabvm.automute.enabled) return;
+		if (this.Config.collabvm.automute === false) return;
 		// rate limit guest and unregistered chat messages, but not staff ones
 		switch (this.rank) {
 			case Rank.Moderator:
@@ -125,7 +133,7 @@ export class User {
 
 	mute(permanent: boolean) {
 		this.IP.muted = true;
-		this.sendMsg(cvm.guacEncode('chat', '', `You have been muted${permanent ? '' : ` for ${this.Config.collabvm.tempMuteTime} seconds`}.`));
+		this.sendMsg(cvm.guacEncode('chat', '', `[Moderation] You have been muted${permanent ? '' : ` for ${this.Config.collabvm.tempMuteTime} seconds`}.`));
 		if (!permanent) {
 			clearTimeout(this.IP.tempMuteExpireTimeout);
 			this.IP.tempMuteExpireTimeout = setTimeout(() => this.unmute(), this.Config.collabvm.tempMuteTime * 1000);
@@ -134,7 +142,7 @@ export class User {
 	unmute() {
 		clearTimeout(this.IP.tempMuteExpireTimeout);
 		this.IP.muted = false;
-		this.sendMsg(cvm.guacEncode('chat', '', 'You are no longer muted.'));
+		this.sendMsg(cvm.guacEncode('chat', '', '[Moderation] You are no longer muted.'));
 	}
 
 	async ban(banmgr: BanManager) {

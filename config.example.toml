@@ -48,6 +48,12 @@ qemuArgs = "qemu-system-x86_64"
 vncPort = 5900
 snapshots = true
 
+# Sound options
+audioEnabled = false
+audioFrequency = 48000 # 48 khz (48000) or 44.1 khz (44100) is supported
+audioId = "sound" # you can change this to whatever you want, but it must be unique
+audioDevice = "hda-duplex" # example: ac97, es1370, sb16, hda-duplex
+
 # Resource limits. 
 # Only works on Linux, with `Delegate=yes` set in your .service file. No-op on other platforms.
 #
@@ -110,6 +116,8 @@ displayname = "a cool vm!<br>The best CollaborativeVM Instance"
 motd = "welcome to my vm!"
 # Maximum amount of active connections allowed from the same IP.
 maxConnections = 2
+# The VM screen quality (0-100)
+screenQuality = 35
 # List of disallowed usernames
 usernameblacklist = ["collaborativevm", "system", "hilter", "nazi"]
 # Maximum length of a chat message

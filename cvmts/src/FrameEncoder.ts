@@ -1,8 +1,19 @@
 import { Size, Rect } from './Utilities';
+import * as fs from 'fs';
+import * as toml from 'toml';
+import IConfig from './IConfig';
 import * as cvm from '@cvmts/cvm-rs';
 
-// TODO: Make it configurable
-let gJpegQuality = 35;
+let Config: IConfig;
+if (fs.existsSync('config.toml')) {
+	var configRaw = fs.readFileSync('config.toml').toString();
+	Config = toml.parse(configRaw);
+} else if (fs.existsSync('config.json')) {
+	var configRaw = fs.readFileSync('config.json').toString();
+	Config = JSON.parse(configRaw);
+}
+
+let gJpegQuality = Config.collabvm.screenQuality ?? 20;
 
 const kThumbnailSize: Size = {
 	width: 400, // ? multiply here

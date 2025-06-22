@@ -34,6 +34,10 @@ export default interface IConfig {
 		qemuArgs: string;
 		vncPort: number;
 		snapshots: boolean;
+		audioEnabled: boolean;
+		audioFrequency: 48000 | 44100;
+		audioId: string;
+		audioDevice: string;
 		resourceLimits?: CgroupLimits
 	};
 	vncvm: VNCVMDef;
@@ -43,6 +47,8 @@ export default interface IConfig {
 		node: string;
 		displayname: string;
 		motd: string;
+		thumbnailSize: number;
+		screenQuality: number;
 		maxConnections: number;
 		usernameblacklist: string[];
 		maxChatLength: number;

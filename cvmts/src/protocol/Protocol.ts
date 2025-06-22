@@ -79,6 +79,7 @@ export interface IProtocolMessageHandler {
 	onAdminHideScreen(user: User, show: boolean): void;
 	onAdminSystemMessage(user: User, message: string): void;
 
+	onAudioMute(user: User): void; // user requests an audio mute/unmute
 	onRename(user: User, newName: string | undefined): void;
 	onChat(user: User, message: string): void;
 
@@ -141,4 +142,7 @@ export interface IProtocol {
 
 	// Sends a rectangle update to the user.
 	sendScreenUpdate(user: User, rect: ScreenRect): void;
+
+	// Sends an opus packet to the user
+	sendAudioOpus(usre: User, data: Buffer): void;
 }

@@ -61,7 +61,7 @@ export default class WSServer extends EventEmitter implements NetworkServer {
 			return;
 		}
 
-		if (this.Config.http.origin) {
+		if (this.Config.http.originAllowedDomains !== false) {
 			// If the client is not sending an Origin header, kill the connection.
 			if (!req.headers.origin) {
 				killConnection();
