@@ -264,7 +264,6 @@ export class User {
 
 export enum Rank {
 	Unregistered = 0,
-	// After all these years
 	Registered = 1,
 	Admin = 2,
 	Moderator = 3

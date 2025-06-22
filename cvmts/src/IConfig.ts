@@ -1,14 +1,14 @@
 import { CgroupLimits } from './vm/qemu_launcher';
 import VNCVMDef from './vm/vnc/VNCVMDef';
 
+// null to false (toml doesn't support null :P)
 export default interface IConfig {
 	http: {
 		host: string;
 		port: number;
 		proxying: boolean;
 		proxyAllowedIps: string[];
-		origin: boolean;
-		originAllowedDomains: string[];
+		originAllowedDomains: string[] | false;
 	};
 	geoip: {
 		enabled: boolean;
@@ -44,27 +44,21 @@ export default interface IConfig {
 		displayname: string;
 		motd: string;
 		maxConnections: number;
-		moderatorEnabled: boolean;
 		usernameblacklist: string[];
 		maxChatLength: number;
 		maxChatHistoryLength: number;
-		turnlimit: {
-			enabled: boolean;
-			maximum: number;
-		};
+		turnlimit: number | false;
 		automute: {
-			enabled: boolean;
 			seconds: number;
 			messages: number;
-		};
+		} | false;
 		tempMuteTime: number;
 		turnTime: number;
 		voteTime: number;
 		voteCooldown: number;
 		adminpass: string;
-		modpass: string;
-		turnwhitelist: boolean;
-		turnpass: string;
+		modpass: string|false;
+		turnpass: string|false;
 		moderatorPermissions: Permissions;
 	};
 }
@@ -90,6 +84,7 @@ export interface Permissions {
 	mute: boolean;
 	kick: boolean;
 	bypassturn: boolean;
+	indefiniteturn: boolean;
 	rename: boolean;
 	grabip: boolean;
 	xss: boolean;

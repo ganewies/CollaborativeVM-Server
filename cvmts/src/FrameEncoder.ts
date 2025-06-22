@@ -1,15 +1,15 @@
 import { Size, Rect } from './Utilities';
 import * as cvm from '@cvmts/cvm-rs';
 
-// A good balance. TODO: Configurable?
+// TODO: Make it configurable
 let gJpegQuality = 35;
 
 const kThumbnailSize: Size = {
-	width: 400,
-	height: 300
+	width: 400, // ? multiply here
+	height: 300 // ? divide here
 };
 
-export class JPEGEncoder {
+export class FrameEncoder {
 	static SetQuality(quality: number) {
 		gJpegQuality = quality;
 	}

@@ -10,7 +10,7 @@ import { IPDataManager } from './IPData.js';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import AuthManager from './AuthManager.js';
-import { JPEGEncoder } from './JPEGEncoder.js';
+import { FrameEncoder } from './FrameEncoder.js';
 import VM from './vm/interface.js';
 import { ReaderModel } from '@maxmind/geoip2-node';
 
@@ -330,7 +330,7 @@ export default class CollabVMServer implements IProtocolMessageHandler {
 	}
 
 	onTurnRequest(user: User, forfeit: boolean): void {
-		if ((!this.turnsAllowed || this.Config.collabvm.turnwhitelist) && user.rank !== Rank.Admin && user.rank !== Rank.Moderator && !user.turnWhitelist) return;
+		if ((!this.turnsAllowed || this.Config.collabvm.turnpass !== false) && user.rank !== Rank.Admin && user.rank !== Rank.Moderator && !user.turnWhitelist) return;
 
 		if (!this.authCheck(user, this.Config.auth.guestPermissions.turn)) return;
 
@@ -344,11 +344,11 @@ export default class CollabVMServer implements IProtocolMessageHandler {
 			// If they're muted, also ignore the turn request.
 			// Send them the turn queue to prevent client glitches
 			if (user.IP.muted) return;
-			if (this.Config.collabvm.turnlimit.enabled) {
+			if (this.Config.collabvm.turnlimit !== false) {
 				// Get the amount of users in the turn queue with the same IP as the user requesting a turn.
 				let turns = currentQueue.filter((otheruser) => otheruser.IP.address == user.IP.address);
 				// If it exceeds the limit set in the config, ignore the turn request.
-				if (turns.length + 1 > this.Config.collabvm.turnlimit.maximum) return;
+				if (turns.length + 1 > this.Config.collabvm.turnlimit) return;
 			}
 			this.TurnQueue.enqueue(user);
 			if (this.TurnQueue.size === 1) this.nextTurn();
@@ -361,7 +361,7 @@ export default class CollabVMServer implements IProtocolMessageHandler {
 
 	onVote(user: User, choice: number): void {
 		if (!this.VM.SnapshotsSupported()) return;
-		if ((!this.turnsAllowed || this.Config.collabvm.turnwhitelist) && user.rank !== Rank.Admin && user.rank !== Rank.Moderator && !user.turnWhitelist) return;
+		if ((!this.turnsAllowed || this.Config.collabvm.turnpass !== false) && user.rank !== Rank.Admin && user.rank !== Rank.Moderator && !user.turnWhitelist) return;
 		if (!user.connectedToNode) return;
 		if (!user.VoteRateLimit.request()) return;
 		switch (choice) {
@@ -511,7 +511,7 @@ export default class CollabVMServer implements IProtocolMessageHandler {
 		var pwdHash = sha256.digest('hex');
 		sha256.destroy();
 
-		if (this.Config.collabvm.turnwhitelist && pwdHash === this.Config.collabvm.turnpass) {
+		if (this.Config.collabvm.turnpass !== false && pwdHash === this.Config.collabvm.turnpass) {
 			user.turnWhitelist = true;
 			user.sendChatMessage('', 'You may now take turns.');
 			return;
@@ -525,7 +525,7 @@ export default class CollabVMServer implements IProtocolMessageHandler {
 		if (pwdHash === this.Config.collabvm.adminpass) {
 			user.rank = Rank.Admin;
 			user.sendAdminLoginResponse(true, undefined);
-		} else if (this.Config.collabvm.moderatorEnabled && pwdHash === this.Config.collabvm.modpass) {
+		} else if (this.Config.collabvm.modpass !== false && pwdHash === this.Config.collabvm.modpass) {
 			user.rank = Rank.Moderator;
 			user.sendAdminLoginResponse(true, this.ModPerms);
 		} else {
@@ -935,11 +935,13 @@ export default class CollabVMServer implements IProtocolMessageHandler {
 	private async MakeRectData(rect: Rect) {
 		let display = this.VM.GetDisplay();
 
-		// TODO: actually throw an error here
-		if (display == null) return Buffer.from('no');
+		if (display == null) {
+			this.logger.error('The display isn\'t active!');
+			return Buffer.from('no');
+		};
 
 		let displaySize = display.Size();
-		let encoded = await JPEGEncoder.Encode(display.Buffer(), displaySize, rect);
+		let encoded = await FrameEncoder.Encode(display.Buffer(), displaySize, rect);
 
 		return encoded;
 	}
@@ -950,7 +952,7 @@ export default class CollabVMServer implements IProtocolMessageHandler {
 		// oh well
 		if (!display?.Connected()) return Buffer.alloc(4);
 
-		return JPEGEncoder.EncodeThumbnail(display.Buffer(), display.Size());
+		return FrameEncoder.EncodeThumbnail(display.Buffer(), display.Size());
 	}
 
 	startVote() {
