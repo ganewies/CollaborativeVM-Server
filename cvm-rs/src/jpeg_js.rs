@@ -1,3 +1,4 @@
+// NOTE: This as been keept for some backward compatibility
 use napi::Env;
 use napi_derive::napi;
 

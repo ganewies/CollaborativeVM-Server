@@ -1,3 +1,4 @@
+// NOTE: This as been keept for some backward compatibility
 use turbojpeg_sys::*;
 
 pub struct Image<'a> {
