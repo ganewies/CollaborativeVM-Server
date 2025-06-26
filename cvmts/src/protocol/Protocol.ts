@@ -141,7 +141,7 @@ export interface IProtocol {
 	sendScreenResize(user: User, width: number, height: number): void;
 
 	// Sends a rectangle update to the user.
-	sendScreenUpdate(user: User, rect: ScreenRect): void;
+	sendScreenUpdate(user: User, buffer: Buffer, rect: ScreenRect): void;
 
 	// Sends an opus packet to the user
 	sendAudioOpus(usre: User, data: Buffer): void;
