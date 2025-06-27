@@ -27,8 +27,8 @@ logger.info('CollabVM Server starting up');
 
 let Config: IConfig;
 
-if (!fs.existsSync('config.toml') || !fs.existsSync('config.json')) {
-	logger.error('Fatal error: Config.toml or Config.json not found. Please copy config.example.toml and fill out fields');
+if (!fs.existsSync('config.toml')) {
+	logger.error('Fatal error: config.toml not found. Please copy config.example.toml and fill out fields');
 	process.exit(1);
 }
 try {
