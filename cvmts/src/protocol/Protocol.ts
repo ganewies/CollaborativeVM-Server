@@ -144,5 +144,5 @@ export interface IProtocol {
 	sendScreenUpdate(user: User, rect: ScreenRect): void;
 
 	// Sends an opus packet to the user
-	sendAudioOpus(usre: User, data: Buffer): void;
+	sendAudioOpus(user: User, data: Buffer): void;
 }
