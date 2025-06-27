@@ -76,9 +76,11 @@ async function start() {
 			// Add QEMU audio args if audio is enabled
 			if (Config.qemu.audioEnabled) {
 				const { audioId, audioFrequency, audioDevice } = Config.qemu;
+				
 				Config.qemu.qemuArgs +=
 					` -audiodev none,id=${audioId},out.frequency=${audioFrequency},in.frequency=${audioFrequency}` +
 					` -device ${audioDevice},audiodev=${audioId}`;
+				if (audioDevice === "hda-duplex") Config.qemu.qemuArgs += " -device ich9-intel-hda"
 			}
 
 			// Fire up the VM

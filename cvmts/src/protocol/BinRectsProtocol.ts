@@ -6,10 +6,9 @@ import { ScreenRect } from './Protocol';
 import { User } from '../User.js';
 
 export class BinRectsProtocol extends GuacamoleProtocol {
-	sendScreenUpdate(user: User, buffer: Buffer, rect: ScreenRect): void {
+	sendScreenUpdate(user: User, rect: ScreenRect): void {
 		let bmsg: CollabVMProtocolMessage = {
 			type: CollabVMProtocolMessageType.frame,
-			frame: buffer,
 			rect: rect
 		};
 		user.socket.sendBinary(msgpack.encode(bmsg));

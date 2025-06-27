@@ -37,7 +37,7 @@ export default interface IConfig {
 		audioEnabled: boolean;
 		audioFrequency: 48000 | 44100;
 		audioId: string;
-		audioDevice: string;
+		audioDevice: "ac97" | "es1370" | "sb16" | "hda-duplex";
 		resourceLimits?: CgroupLimits
 	};
 	vncvm: VNCVMDef;

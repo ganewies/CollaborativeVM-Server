@@ -10,7 +10,7 @@ import { Size, Rect } from '../Utilities.js';
 // This only affects internal polling,
 // if the VNC itself is sending updates at a slower rate
 // the display will be at that slower rate
-const kVncBaseFramerate = 60;
+const kVncBaseFramerate = 30;
 
 export type VncRect = {
 	x: number;
@@ -19,9 +19,6 @@ export type VncRect = {
 	height: number;
 };
 
-
-// TODO: replace with a non-asshole VNC client (prefably one implemented
-// as a part of cvm-rs)
 export class VncDisplay extends EventEmitter implements VMDisplay {
 	private displayVnc = new VncClient({
 		debug: false,

@@ -347,19 +347,8 @@ export class GuacamoleProtocol implements IProtocol {
 		this.send(user, 'size', '0', width.toString(), height.toString());
 	}
 
-	sendScreenUpdate(user: User, buffer: Buffer, rect: ScreenRect): void {
-		if (!user?.socket?.isOpen()) return;
-
-		const header = Buffer.alloc(9);
-		header[0] = 0x03; // Type = h264
-
-		header.writeUInt16BE(rect.x, 1);
-		header.writeUInt16BE(rect.y, 3);
-		header.writeUInt32BE(buffer.length, 5);
-
-		const payload = Buffer.concat([header, buffer]);
-
-		user.socket.sendBinary(payload);
+	sendScreenUpdate(user: User, rect: ScreenRect): void {
+		this.send(user, 'png', '0', '0', rect.x.toString(), rect.y.toString(), rect.data.toString('base64'));
 		this.sendSync(user, Date.now());
 	}
 
