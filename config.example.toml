@@ -144,6 +144,8 @@ adminpass = "f52fbd32b2b3b86ff88ef6c490628285f482af15ddcb29541f94bcf526a3f6c7"
 modpass = "fb8c2e2b85ca81eb4350199faddd983cb26af3064614e737ea9f479621cfa57a"
 # (To disable, set it to false) SHA256 sum for the password to take a turn. If set to an empty string or not provided, only admins and mods can take turns
 turnpass = false
+# (To disable the real-time card, set it to 0) Define a real-time minimum limit refresh rate to your VM card on the webapp
+cardRefreshRate = 5000 # in ms
 
 # What a moderator can and can't do
 [collabvm.moderatorPermissions]

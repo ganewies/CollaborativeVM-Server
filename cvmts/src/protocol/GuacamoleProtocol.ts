@@ -353,6 +353,7 @@ export class GuacamoleProtocol implements IProtocol {
 	}
 
 	sendAudioOpus(user: User, data: Buffer): void {
-		// dummy definition
+		//     ig its not here but there:
+		// https://github.com/ganewies/CollaborativeVM-Server/blob/master/cvmts/src/protocol/BinRectsProtocol.ts#L17
 	}
 }

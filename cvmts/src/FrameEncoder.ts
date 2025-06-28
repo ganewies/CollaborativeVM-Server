@@ -8,7 +8,7 @@ let Config: IConfig;
 var configRaw = fs.readFileSync('config.toml').toString();
 Config = toml.parse(configRaw);
 
-let gJpegQuality = Config.collabvm.screenQuality ?? 20;
+let gJpegQuality = Config.collabvm.screenQuality ?? 30;
 
 const kThumbnailSize: Size = {
 	width: 400, // ? multiply here
@@ -38,7 +38,7 @@ export class FrameEncoder {
 			desiredWidth: kThumbnailSize.width,
 			desiredHeight: kThumbnailSize.height,
 			buffer: buffer,
-			quality: gJpegQuality
+			quality: 75 // btw its a thumbnail ig
 		});
 	}
 }

@@ -22,6 +22,7 @@ export interface ListEntry {
 	id: string;
 	name: string;
 	thumbnail: Buffer;
+	refreshRate: false|number;
 }
 
 export interface ProtocolChatHistory {

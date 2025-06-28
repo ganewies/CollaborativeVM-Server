@@ -65,6 +65,7 @@ export default interface IConfig {
 		adminpass: string;
 		modpass: string|false;
 		turnpass: string|false;
+		cardRefreshRate: number;
 		moderatorPermissions: Permissions;
 	};
 }

@@ -16,6 +16,7 @@ export class BinRectsProtocol extends GuacamoleProtocol {
 
 	sendAudioOpus(user: User, opusPacket: Buffer): void {
 		if (!user?.socket.isOpen()) return;
+		if (user.audioMute) return;
 
 		try {
 		  	let bmsg: CollabVMProtocolMessage = {

@@ -402,13 +402,13 @@ export default class CollabVMServer implements IProtocolMessageHandler {
 					}
 
 					this.startVote();
-					this.clients.forEach((c) => c.sendChatMessage('', `${user.username} has started a vote to reset the VM.`));
+					this.clients.forEach((c) => c.sendChatMessage('', `[Vote] ${user.username} has started a vote to reset the VM.`));
 				}
 
 				if (!this.authCheck(user, this.Config.auth.guestPermissions.vote)) return;
 
 				if (user.IP.vote !== true) {
-					this.clients.forEach((c) => c.sendChatMessage('', `${user.username} has voted yes.`));
+					this.clients.forEach((c) => c.sendChatMessage('', `[Vote] ${user.username} has voted yes.`));
 				}
 				user.IP.vote = true;
 				break;
@@ -418,7 +418,7 @@ export default class CollabVMServer implements IProtocolMessageHandler {
 				if (!this.authCheck(user, this.Config.auth.guestPermissions.vote)) return;
 
 				if (user.IP.vote !== false) {
-					this.clients.forEach((c) => c.sendChatMessage('', `${user.username} has voted no.`));
+					this.clients.forEach((c) => c.sendChatMessage('', `[Vote] ${user.username} has voted no.`));
 				}
 				user.IP.vote = false;
 				break;
@@ -432,7 +432,8 @@ export default class CollabVMServer implements IProtocolMessageHandler {
 		let listEntry: ListEntry = {
 			id: this.Config.collabvm.node,
 			name: this.Config.collabvm.displayname,
-			thumbnail: this.screenHidden ? this.screenHiddenThumb : await this.getThumbnail()
+			thumbnail: this.screenHidden ? this.screenHiddenThumb : await this.getThumbnail(),
+			refreshRate: this.Config.collabvm.cardRefreshRate ? this.Config.collabvm.cardRefreshRate : false
 		};
 
 		if (this.VM.GetState() == VMState.Started) {
@@ -1023,6 +1024,11 @@ export default class CollabVMServer implements IProtocolMessageHandler {
 
 		if (client) client.sendVoteStats(this.voteTime * 1000, count.yes, count.no);
 		else this.clients.forEach((c) => c.sendVoteStats(this.voteTime * 1000, count.yes, count.no));
+	}
+
+	// TODO: Handle the audio thingy
+	sendAudioOpus(user: User) {
+
 	}
 
 	getVoteCounts(): VoteTally {
