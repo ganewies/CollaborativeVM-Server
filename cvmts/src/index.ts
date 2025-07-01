@@ -48,7 +48,7 @@ async function stop() {
 		let msg = typeof Config.discord.status.offlineMsg === 'string' ? Config.discord.status.offlineMsg : Config.discord.status.offlineMsg.message;
 		if (!msg || msg === "") msg = " ";
 		//@ts-ignore
-		let embed = Config.discord.status.offlineMsg.embed ? {} : undefined;
+		let embed = Config.discord.status.offlineMsg.embed ? { timestamp: new Date().toISOString() } : undefined;
 		//@ts-ignore  Title      -----------------------------------
 		if (embed && Config.discord.status.offlineMsg.embed.title) typeof Config.discord.status.offlineMsg.embed.title === 'object' ? embed.title = Config.discord.status.offlineMsg.embed.title.text : embed.title = Config.discord.status.offlineMsg.embed.title;
 		//@ts-ignore
@@ -115,7 +115,7 @@ async function start() {
 		let msg = typeof Config.discord.status.onlineMsg === 'string' ? Config.discord.status.onlineMsg : Config.discord.status.onlineMsg.message;
 		if (!msg || msg === "") msg = " ";
 		//@ts-ignore
-		let embed = Config.discord.status.onlineMsg.embed ? {} : undefined;
+		let embed = Config.discord.status.onlineMsg.embed ? { timestamp: new Date().toISOString() } : undefined;
 		//@ts-ignore  Title      -----------------------------------
 		if (embed && Config.discord.status.onlineMsg.embed.title) typeof Config.discord.status.onlineMsg.embed.title === 'object' ? embed.title = Config.discord.status.onlineMsg.embed.title.text : embed.title = Config.discord.status.onlineMsg.embed.title;
 		//@ts-ignore
