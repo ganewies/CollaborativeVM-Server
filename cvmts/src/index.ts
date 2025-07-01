@@ -44,6 +44,47 @@ let VM: VM;
 
 async function stop() {
 	if (exiting) return;
+	if (Config.discord.status && Config.discord.status.offlineMsg !== false) {
+		let msg = typeof Config.discord.status.offlineMsg === 'string' ? Config.discord.status.offlineMsg : Config.discord.status.offlineMsg.message;
+		if (!msg || msg === "") msg = " ";
+		//@ts-ignore
+		let embed = Config.discord.status.offlineMsg.embed ? {} : undefined;
+		//@ts-ignore  Title      -----------------------------------
+		if (embed && Config.discord.status.offlineMsg.embed.title) typeof Config.discord.status.offlineMsg.embed.title === 'object' ? embed.title = Config.discord.status.offlineMsg.embed.title.text : embed.title = Config.discord.status.offlineMsg.embed.title;
+		//@ts-ignore
+		if (embed && Config.discord.status.offlineMsg.embed.title && typeof Config.discord.status.offlineMsg.embed.title === 'object' && Config.discord.status.offlineMsg.embed.title.url) embed.url = Config.discord.status.offlineMsg.embed.title.url;
+		//@ts-ignore  Image      -----------------------------------
+		if (embed && Config.discord.status.offlineMsg.embed.image) embed.image = { url: Config.discord.status.offlineMsg.embed.image };
+		//@ts-ignore  Thumbnail  -----------------------------------
+		if (embed && Config.discord.status.offlineMsg.embed.thumbnail) embed.thumbnail = { url: Config.discord.status.offlineMsg.embed.thumbnail };
+		//@ts-ignore  Color      -----------------------------------
+		if (embed && Config.discord.status.offlineMsg.embed.color) embed.color = Config.discord.status.offlineMsg.embed.color;
+		//@ts-ignore  Description-----------------------------------
+		if (embed && Config.discord.status.offlineMsg.embed.description) embed.description = Config.discord.status.offlineMsg.embed.description;
+		//@ts-ignore  Footer     ------------------------------
+		if (embed && Config.discord.status.offlineMsg.embed.footer && typeof Config.discord.status.offlineMsg.embed.footer === 'string') embed.footer = { text: Config.discord.status.offlineMsg.embed.footer };
+		//@ts-ignore
+		if (embed && Config.discord.status.offlineMsg.embed.footer && typeof Config.discord.status.offlineMsg.embed.footer === 'object' && Config.discord.status.offlineMsg.embed.footer.text) embed.footer = { text: Config.discord.status.offlineMsg.embed.footer.text };
+		//@ts-ignore
+		if (embed && Config.discord.status.offlineMsg.embed.footer && typeof Config.discord.status.offlineMsg.embed.footer === 'object' && Config.discord.status.offlineMsg.embed.footer.icon) embed.footer.icon_url = Config.discord.status.offlineMsg.embed.footer.icon;
+		//@ts-ignore  Author     -----------------------------------
+		if (embed && Config.discord.status.offlineMsg.embed.author && typeof Config.discord.status.offlineMsg.embed.author === 'string') embed.author = { name: Config.discord.status.offlineMsg.embed.author };
+		//@ts-ignore
+		if (embed && Config.discord.status.offlineMsg.embed.author && typeof Config.discord.status.offlineMsg.embed.author === 'object' && Config.discord.status.offlineMsg.embed.author.text) embed.author = { name: Config.discord.status.offlineMsg.embed.footer.text };
+		//@ts-ignore
+		if (embed && Config.discord.status.offlineMsg.embed.author && typeof Config.discord.status.offlineMsg.embed.author === 'object' && Config.discord.status.offlineMsg.embed.author.icon) embed.author.icon_url = Config.discord.status.offlineMsg.embed.author.icon;
+		//@ts-ignore
+		if (embed && Config.discord.status.offlineMsg.embed.author && typeof Config.discord.status.offlineMsg.embed.author === 'object' && Config.discord.status.offlineMsg.embed.author.url) embed.author.url = Config.discord.status.offlineMsg.embed.author.url;
+
+		let bodyReq = {
+			embeds: [embed],
+			content: msg
+		}
+		await fetch(Config.discord.status.webhookUrl, {
+			method: 'POST',
+			body: JSON.stringify(bodyReq)
+		});
+	}
 	exiting = true;
 	await VM.Stop();
 	process.exit(0);
@@ -69,6 +110,47 @@ async function start() {
 	if (Config.mysql.enabled) {
 		db = new Database(Config.mysql);
 		await db.init();
+	}
+	if (Config.discord.status && Config.discord.status.onlineMsg !== false) {
+		let msg = typeof Config.discord.status.onlineMsg === 'string' ? Config.discord.status.onlineMsg : Config.discord.status.onlineMsg.message;
+		if (!msg || msg === "") msg = " ";
+		//@ts-ignore
+		let embed = Config.discord.status.onlineMsg.embed ? {} : undefined;
+		//@ts-ignore  Title      -----------------------------------
+		if (embed && Config.discord.status.onlineMsg.embed.title) typeof Config.discord.status.onlineMsg.embed.title === 'object' ? embed.title = Config.discord.status.onlineMsg.embed.title.text : embed.title = Config.discord.status.onlineMsg.embed.title;
+		//@ts-ignore
+		if (embed && Config.discord.status.onlineMsg.embed.title && typeof Config.discord.status.onlineMsg.embed.title === 'object' && Config.discord.status.onlineMsg.embed.title.url) embed.url = Config.discord.status.onlineMsg.embed.title.url;
+		//@ts-ignore  Image      -----------------------------------
+		if (embed && Config.discord.status.onlineMsg.embed.image) embed.image = { url: Config.discord.status.onlineMsg.embed.image };
+		//@ts-ignore  Thumbnail  -----------------------------------
+		if (embed && Config.discord.status.onlineMsg.embed.thumbnail) embed.thumbnail = { url: Config.discord.status.onlineMsg.embed.thumbnail };
+		//@ts-ignore  Color      -----------------------------------
+		if (embed && Config.discord.status.onlineMsg.embed.color) embed.color = Config.discord.status.onlineMsg.embed.color;
+		//@ts-ignore  Description-----------------------------------
+		if (embed && Config.discord.status.onlineMsg.embed.description) embed.description = Config.discord.status.onlineMsg.embed.description;
+		//@ts-ignore  Footer     ------------------------------
+		if (embed && Config.discord.status.onlineMsg.embed.footer && typeof Config.discord.status.onlineMsg.embed.footer === 'string') embed.footer = { text: Config.discord.status.onlineMsg.embed.footer };
+		//@ts-ignore
+		if (embed && Config.discord.status.onlineMsg.embed.footer && typeof Config.discord.status.onlineMsg.embed.footer === 'object' && Config.discord.status.onlineMsg.embed.footer.text) embed.footer = { text: Config.discord.status.onlineMsg.embed.footer.text };
+		//@ts-ignore
+		if (embed && Config.discord.status.onlineMsg.embed.footer && typeof Config.discord.status.onlineMsg.embed.footer === 'object' && Config.discord.status.onlineMsg.embed.footer.icon) embed.footer.icon_url = Config.discord.status.onlineMsg.embed.footer.icon;
+		//@ts-ignore  Author     -----------------------------------
+		if (embed && Config.discord.status.onlineMsg.embed.author && typeof Config.discord.status.onlineMsg.embed.author === 'string') embed.author = { name: Config.discord.status.onlineMsg.embed.author };
+		//@ts-ignore
+		if (embed && Config.discord.status.onlineMsg.embed.author && typeof Config.discord.status.onlineMsg.embed.author === 'object' && Config.discord.status.onlineMsg.embed.author.text) embed.author = { name: Config.discord.status.onlineMsg.embed.footer.text };
+		//@ts-ignore
+		if (embed && Config.discord.status.onlineMsg.embed.author && typeof Config.discord.status.onlineMsg.embed.author === 'object' && Config.discord.status.onlineMsg.embed.author.icon) embed.author.icon_url = Config.discord.status.onlineMsg.embed.author.icon;
+		//@ts-ignore
+		if (embed && Config.discord.status.onlineMsg.embed.author && typeof Config.discord.status.onlineMsg.embed.author === 'object' && Config.discord.status.onlineMsg.embed.author.url) embed.author.url = Config.discord.status.onlineMsg.embed.author.url;
+
+		let bodyReq = {
+			embeds: [embed],
+			content: msg
+		}
+		await fetch(Config.discord.status.webhookUrl, {
+			method: 'POST',
+			body: JSON.stringify(bodyReq)
+		});
 	}
 	let banmgr = new BanManager(Config.bans, db);
 	switch (Config.vm.type) {

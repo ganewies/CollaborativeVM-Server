@@ -147,6 +147,15 @@ turnpass = false
 # (To disable the real-time card, set it to 0) Define a real-time minimum limit refresh rate to your VM card on the webapp
 cardRefreshRate = 5000 # in ms
 
+# A Discord webhook status auto-notifier
+[discord.status]
+webhookUrl = "https://discord.com/api/v10/webhooks/WEBHOOK_ID/WEBHOOK_TOKEN"
+# or if just want simply a message put: onlineMsg = "my message"
+onlineMsg = { message = "hi bestvm is online ;D", embed = { color = "hex color (??????, e.g.: fff or fffffff for white)", author = { text = "im the owner, say thank you!", icon = "http://example.net/lorem.png" }, title = { text = "on!!", url = "http://example.net" }, thumbnail = "http://example.net/lorem.png", description = "yaey", image = "http://example.net/lorem.png", footer = { text = "annouced the status", icon = "http://example.net/lorem.png" } } }
+# or if just want simply a message put: offlineMsg = "my message"
+offlineMsg = { message = "hi bestvm is.. off :(", embed = { color = "hex color (??????, e.g.: fff or fffffff for white)", author = { text = "\"i wanna cry cuz of that\" - peoples", icon = "http://example.net/lorem.png" }, title = { text = "why off .", url = "http://example.net" }, thumbnail = "http://example.net/lorem.png", description = "NOOOOOOOOOOOOOOOOOOOOOOO", image = "http://example.net/lorem.png", footer = { text = "annouced the status", icon = "http://example.net/lorem.png" } } }
+webhookCustomization = { name = "BestVM Status", icon = "http://example.net/lorem.png" }
+
 # What a moderator can and can't do
 [collabvm.moderatorPermissions]
 restore = true

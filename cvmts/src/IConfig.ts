@@ -68,6 +68,37 @@ export default interface IConfig {
 		cardRefreshRate: number;
 		moderatorPermissions: Permissions;
 	};
+	discord: {
+		status?: {
+			webhookUrl: string;
+			onlineMsg: /*message*/string | {
+				message: string | false;
+				embed?: {
+					color?: string;
+					author?: { text: string; icon?: URL; }
+					title?: string | { text: string; url?: URL; };
+					thumbnail?: URL;
+					description?: string/* | string[]*/; // ill do the array of string later bruh its late on my timezone tho
+					image?: URL;
+					footer?: string | { text: string; icon?: URL; };
+				};
+			} | false;
+			offlineMsg: /*message*/string | {
+				message: string | false;
+				embed?: {
+					color?: string;
+					author?: string | { text: string; icon?: URL; url?: URL; }
+					title?: string | { text: string; url?: URL; };
+					thumbnail?: URL;
+					description?: string;
+					image?: URL;
+					footer?: string | { text: string; icon?: URL; };
+				};
+			} | false;
+			webhookCustomization?: { name?: string; icon?: URL; };
+		}
+
+	};
 }
 
 export interface MySQLConfig {
