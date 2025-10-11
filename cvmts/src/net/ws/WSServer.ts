@@ -93,7 +93,7 @@ export default class WSServer extends EventEmitter implements NetworkServer {
 		}
 
 		let ip: string;
-		if (this.Config.http.proxying) {
+		if (this.Config.http.proxyAllowedIps) {
 			// If the requesting IP isn't allowed to proxy, kill it
 			if (this.Config.http.proxyAllowedIps.indexOf(req.socket.remoteAddress!) === -1) {
 				killConnection();

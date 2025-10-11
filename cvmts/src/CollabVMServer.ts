@@ -643,7 +643,7 @@ export default class CollabVMServer implements IProtocolMessageHandler {
 	onAdminRename(user: User, target: string, newName: string): void {
 		if (user.rank !== Rank.Admin && (user.rank !== Rank.Moderator || !this.Config.collaborativevm.modPerms.rename)) return;
 		var targetUser = this.clients.find((c) => c.username === target);
-		if (this.Config.auth.enabled && targetUser.) {
+		if (this.Config.auth.enabled && targetUser?.isAuthenticated) {
 			user.sendChatMessage('', 'Cannot rename users on a server that uses authentication.');
 		}
 		if (!targetUser) return;
