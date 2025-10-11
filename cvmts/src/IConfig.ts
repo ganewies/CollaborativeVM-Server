@@ -1,13 +1,12 @@
 import { CgroupLimits } from './vm/qemu_launcher';
 import VNCVMDef from './vm/vnc/VNCVMDef';
 
-// null to false (toml doesn't support null :P)
+//? null to false (toml doesn't support null :P)
 export default interface IConfig {
 	http: {
 		host: string;
 		port: number;
-		proxying: boolean;
-		proxyAllowedIps: string[];
+		proxyAllowedIps: string[] | false;
 		originAllowedDomains: string[] | false;
 	};
 	geoip: {
@@ -43,7 +42,7 @@ export default interface IConfig {
 	vncvm: VNCVMDef;
 	mysql: MySQLConfig;
 	bans: BanConfig;
-	collabvm: {
+	collaborativevm: {
 		node: string;
 		displayname: string;
 		motd: string;
@@ -66,36 +65,14 @@ export default interface IConfig {
 		modpass: string|false;
 		turnpass: string|false;
 		cardRefreshRate: number;
-		moderatorPermissions: Permissions;
+		modPerms: Permissions;
 	};
 	discord: {
 		status?: {
 			webhookUrl: string;
-			onlineMsg: /*message*/string | {
-				message: string | false;
-				embed?: {
-					color?: string;
-					author?: { text: string; icon?: URL; }
-					title?: string | { text: string; url?: URL; };
-					thumbnail?: URL;
-					description?: string/* | string[]*/; // ill do the array of string later bruh its late on my timezone tho
-					image?: URL;
-					footer?: string | { text: string; icon?: URL; };
-				};
-			} | false;
-			offlineMsg: /*message*/string | {
-				message: string | false;
-				embed?: {
-					color?: string;
-					author?: string | { text: string; icon?: URL; url?: URL; }
-					title?: string | { text: string; url?: URL; };
-					thumbnail?: URL;
-					description?: string;
-					image?: URL;
-					footer?: string | { text: string; icon?: URL; };
-				};
-			} | false;
-			webhookCustomization?: { name?: string; icon?: URL; };
+			onlineMsg: /*message*/string | false;
+			offlineMsg: /*message*/string | false;
+			webhookCustomization?: { name?: string; icon?: URL; } | false;
 		}
 
 	};
@@ -118,12 +95,14 @@ export interface Permissions {
 	restore: boolean;
 	reboot: boolean;
 	ban: boolean;
-	forcevote: boolean;
+	forceVote: boolean;
 	mute: boolean;
 	kick: boolean;
-	bypassturn: boolean;
-	indefiniteturn: boolean;
+	bypassTurn: boolean;
+	indefiniteTurn: boolean;
 	rename: boolean;
-	grabip: boolean;
+	grabIP: boolean;
 	xss: boolean;
+	hideScreen: boolean;
+	cutScreen: boolean;
 }

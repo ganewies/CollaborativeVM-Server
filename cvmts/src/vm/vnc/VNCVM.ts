@@ -7,10 +7,6 @@ import { execaCommand } from 'execa';
 import pino from 'pino';
 import { VncDisplay } from '../../display/vnc.js';
 
-function Clamp(input: number, min: number, max: number) {
-	return Math.min(Math.max(input, min), max);
-}
-
 async function Sleep(ms: number) {
 	return new Promise((resolve) => setTimeout(resolve, ms));
 }

@@ -22,7 +22,7 @@ impl JpegCompressor {
 			let init = Self {
 				handle: tjInitCompress(),
 				subsamp: TJSAMP_TJSAMP_422,
-				quality: 95,
+				quality: 80,
 			};
 			return init;
 		}
@@ -62,8 +62,8 @@ impl JpegCompressor {
 			);
 
 			// TODO: Result sex so we can actually notify failure   // wtf computernewb???
-            
 			if res == -1 {
+				
 				return Vec::new();
 			}
 

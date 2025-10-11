@@ -59,13 +59,14 @@ export function MakeModPerms(modperms: Permissions): number {
 	if (modperms.restore) perms |= 1;
 	if (modperms.reboot) perms |= 2;
 	if (modperms.ban) perms |= 4;
-	if (modperms.forcevote) perms |= 8;
+	if (modperms.forceVote) perms |= 8;
 	if (modperms.mute) perms |= 16;
 	if (modperms.kick) perms |= 32;
-	if (modperms.bypassturn) perms |= 64;
-	if (modperms.indefiniteturn) perms |= 128;
+	if (modperms.bypassTurn) perms |= 64;
+	if (modperms.indefiniteTurn) perms |= 128;
 	if (modperms.rename) perms |= 256;
-	if (modperms.grabip) perms |= 512;
+	if (modperms.grabIP) perms |= 512;
 	if (modperms.xss) perms |= 1024;
+	if (modperms.hideScreen) perms |= 2048;
 	return perms;
 }

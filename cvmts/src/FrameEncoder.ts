@@ -8,11 +8,11 @@ let Config: IConfig;
 var configRaw = fs.readFileSync('config.toml').toString();
 Config = toml.parse(configRaw);
 
-let gJpegQuality = Config.collabvm.screenQuality ?? 30;
+let gJpegQuality = Config.collaborativevm.screenQuality ?? 40;
 
 const kThumbnailSize: Size = {
-	width: 400, // ? multiply here
-	height: 300 // ? divide here
+	width: 400,    // ? multiply here
+	height: 300    // ?  divide here
 };
 
 export class FrameEncoder {
@@ -38,7 +38,7 @@ export class FrameEncoder {
 			desiredWidth: kThumbnailSize.width,
 			desiredHeight: kThumbnailSize.height,
 			buffer: buffer,
-			quality: 75 // btw its a thumbnail ig
+			quality: 70 // btw its a thumbnail ig
 		});
 	}
 }

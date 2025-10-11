@@ -1,6 +1,6 @@
 import { Rank, User } from '../User';
 
-// We should probably put this in the binproto repository or something
+// TODO: Put this in the protocol repository
 export enum ProtocolUpgradeCapability {
 	BinRects = 'bin'
 }
@@ -59,6 +59,8 @@ export interface IProtocolMessageHandler {
 	onList(user: User): void;
 	onConnect(user: User, node: string): void;
 	onView(user: User, node: string, viewMode: number): void;
+	
+	onAudioMute(user: User): void; // user requests an audio mute/unmute
 
 	// Admin handlers
 	onAdminLogin(user: User, password: string): void;
@@ -74,13 +76,14 @@ export interface IProtocolMessageHandler {
 	onAdminRename(user: User, target: string, newName: string): void;
 	onAdminGetIP(user: User, username: string): void;
 	onAdminBypassTurn(user: User): void;
+	onAdminClearChat(user: User): void;
 	onAdminRawMessage(user: User, message: string): void;
 	onAdminToggleTurns(user: User, enabled: boolean): void;
 	onAdminIndefiniteTurn(user: User): void;
 	onAdminHideScreen(user: User, show: boolean): void;
+	onAdminCutScreen(user: User, target: string): void;
 	onAdminSystemMessage(user: User, message: string): void;
 
-	onAudioMute(user: User): void; // user requests an audio mute/unmute
 	onRename(user: User, newName: string | undefined): void;
 	onChat(user: User, message: string): void;
 
@@ -120,6 +123,7 @@ export interface IProtocol {
 	sendAdminIPResponse(user: User, username: string, ip: string): void;
 
 	sendChatMessage(user: User, username: '' | string, message: string): void;
+	sendClearChat(user: User): void;
 	sendChatHistoryMessage(user: User, history: ProtocolChatHistory[]): void;
 
 	sendAddUser(user: User, users: ProtocolAddUser[]): void;
@@ -141,9 +145,6 @@ export interface IProtocol {
 
 	sendScreenResize(user: User, width: number, height: number): void;
 
-	// Sends a rectangle update to the user.
 	sendScreenUpdate(user: User, rect: ScreenRect): void;
-
-	// Sends an opus packet to the user
-	sendAudioOpus(user: User, data: Buffer): void;
+	sendAudioOpus(usre: User, data: Buffer): void;
 }

@@ -58,7 +58,7 @@ export class IPDataManager {
 	}
 }
 
-// Garbage collect unreferenced IPDatas every 15 seconds.
+// Garbage collect unreferenced IPDatas every 30 seconds.
 // Strictly speaking this will just allow the v8 GC to finally
 // delete the objects, but same difference.
 setInterval(() => {
@@ -68,4 +68,4 @@ setInterval(() => {
 			IPDataManager.ipDatas.delete(tuple[0]);
 		}
 	}
-}, 15000);
+}, 30000);

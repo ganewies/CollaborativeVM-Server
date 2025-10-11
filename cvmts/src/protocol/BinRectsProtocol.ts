@@ -11,23 +11,21 @@ export class BinRectsProtocol extends GuacamoleProtocol {
 			type: CollabVMProtocolMessageType.frame,
 			rect: rect
 		};
+		//@ts-ignore
 		user.socket.sendBinary(msgpack.encode(bmsg));
 	}
 
 	sendAudioOpus(user: User, opusPacket: Buffer): void {
 		if (!user?.socket.isOpen()) return;
-		if (user.audioMute) return;
-
+		
 		try {
 		  	let bmsg: CollabVMProtocolMessage = {
 				type: CollabVMProtocolMessageType.audioOpus,
 				opusPacket: opusPacket
 		  	};
-
 		 	const encoded = msgpack.encode(bmsg);
+			//@ts-ignore
 		  	user.socket.sendBinary(encoded);
-		} catch (err) {
-		  	console.error('[Server] Error sending audioOpus:', err);
-		}
+		} catch (err) { console.error('[Server] Error sending audioOpus:', err) }
 	}
 }

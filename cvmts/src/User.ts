@@ -16,6 +16,7 @@ export class User {
 	msgRecieveInterval: NodeJS.Timeout;
 	nopRecieveTimeout?: NodeJS.Timeout;
 	username?: string;
+	isAuthenticated: boolean = false;
 	connectedToNode: boolean;
 	viewMode: number;
 	rank: Rank;
@@ -34,7 +35,6 @@ export class User {
 	RenameRateLimit: RateLimiter;
 	TurnRateLimit: RateLimiter;
 	VoteRateLimit: RateLimiter;
-
 	audioMute: boolean | undefined;
 
 	private logger = pino({ name: 'CVMTS.User' });
@@ -65,20 +65,20 @@ export class User {
 		this.sendNop();
 		if (username) this.username = username;
 		this.rank = 0;
-		if (this.Config.collabvm.automute !== false) {
-			this.ChatRateLimit = new RateLimiter(this.Config.collabvm.automute.messages, this.Config.collabvm.automute.seconds);
+		if (this.Config.collaborativevm.automute !== false) {
+			this.ChatRateLimit = new RateLimiter(this.Config.collaborativevm.automute.messages, this.Config.collaborativevm.automute.seconds);
 			this.ChatRateLimit.on('limit', () => this.mute(false));
 		} else {
 			this.ChatRateLimit = new RateLimiter(5, 5); // default config
 			this.ChatRateLimit.on('limit', () => this.mute(false));
 		}
-		this.RenameRateLimit = new RateLimiter(3, 60);
+		this.RenameRateLimit = new RateLimiter(3, 45);
 		this.RenameRateLimit.on('limit', () => this.closeConnection());
 		this.LoginRateLimit = new RateLimiter(4, 3);
 		this.LoginRateLimit.on('limit', () => this.closeConnection());
 		this.TurnRateLimit = new RateLimiter(5, 3);
 		this.TurnRateLimit.on('limit', () => this.closeConnection());
-		this.VoteRateLimit = new RateLimiter(3, 3);
+		this.VoteRateLimit = new RateLimiter(3, 4);
 		this.VoteRateLimit.on('limit', () => this.closeConnection());
 		this.audioMute = true;
 	}
@@ -86,7 +86,7 @@ export class User {
 	assignGuestName(existingUsers: string[]): string {
 		var username;
 		do {
-			username = 'guest' + Utilities.Randint(10000, 99999);
+			username = 'anonymous' + Utilities.Randint(100, 999);
 		} while (existingUsers.indexOf(username) !== -1);
 		this.username = username;
 		return username;
@@ -118,7 +118,7 @@ export class User {
 	}
 
 	onChatMsgSent() {
-		if (this.Config.collabvm.automute === false) return;
+		if (this.Config.collaborativevm.automute === false) return;
 		// rate limit guest and unregistered chat messages, but not staff ones
 		switch (this.rank) {
 			case Rank.Moderator:
@@ -133,10 +133,10 @@ export class User {
 
 	mute(permanent: boolean) {
 		this.IP.muted = true;
-		this.sendMsg(cvm.guacEncode('chat', '', `[Moderation] You have been muted${permanent ? '' : ` for ${this.Config.collabvm.tempMuteTime} seconds`}.`));
+		this.sendMsg(cvm.guacEncode('chat', '', `[Moderation] You have been muted${permanent ? '' : ` for ${this.Config.collaborativevm.tempMuteTime} seconds`}.`));
 		if (!permanent) {
 			clearTimeout(this.IP.tempMuteExpireTimeout);
-			this.IP.tempMuteExpireTimeout = setTimeout(() => this.unmute(), this.Config.collabvm.tempMuteTime * 1000);
+			this.IP.tempMuteExpireTimeout = setTimeout(() => this.unmute(), this.Config.collaborativevm.tempMuteTime * 1000);
 		}
 	}
 	unmute() {
@@ -268,11 +268,16 @@ export class User {
 	sendScreenUpdate(rect: ScreenRect): void {
 		this.protocol.sendScreenUpdate(this, rect);
 	}
+
+	sendClearChat(): void {
+		this.protocol.sendClearChat(this);
+	}
 }
 
 export enum Rank {
 	Unregistered = 0,
 	Registered = 1,
 	Admin = 2,
-	Moderator = 3
+	Moderator = 3,
+	Owner = 11
 }

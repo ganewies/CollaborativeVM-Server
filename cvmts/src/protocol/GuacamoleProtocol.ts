@@ -96,6 +96,9 @@ export class GuacamoleProtocol implements IProtocol {
 				}
 				break;
 			case '25':
+				handler.onAdminCutScreen(user, decodedElements[2]);
+				break;
+			case '99':
 				if (decodedElements.length !== 3) return false;
 				handler.onAdminSystemMessage(user, decodedElements[2]);
 				break;
@@ -185,7 +188,10 @@ export class GuacamoleProtocol implements IProtocol {
 			case 'admin':
 				if (decodedElements.length < 2) return false;
 				return this.__processMessage_admin(user, handler, decodedElements);
-
+			case 'clear':
+				handler.onAdminClearChat(user);
+				break;
+			
 			case 'audioMute':
 				if (decodedElements.length !== 1) return false;
 				handler.onAudioMute(user);
@@ -352,8 +358,11 @@ export class GuacamoleProtocol implements IProtocol {
 		this.sendSync(user, Date.now());
 	}
 
+	sendClearChat(user: User): void {
+		this.send(user, 'clear', 'chat');
+	}
+
 	sendAudioOpus(user: User, data: Buffer): void {
-		//     ig its not here but there:
-		// https://github.com/ganewies/CollaborativeVM-Server/blob/master/cvmts/src/protocol/BinRectsProtocol.ts#L17
+		// dummy definition
 	}
 }

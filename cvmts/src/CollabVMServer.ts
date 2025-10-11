@@ -21,8 +21,7 @@ import { TheAuditLog } from './AuditLog.js';
 import { IProtocolMessageHandler, ListEntry, ProtocolAddUser, ProtocolFlag, ProtocolRenameStatus, ProtocolUpgradeCapability } from './protocol/Protocol.js';
 import { TheProtocolManager } from './protocol/Manager.js';
 
-import pkg from '@discordjs/opus';
-const { OpusEncoder } = pkg;
+import { OpusEncoder } from '@discordjs/opus';
 
 // Instead of strange hacks we can just use nodejs provided
 // import.meta properties, which have existed since LTS if not before
@@ -121,7 +120,7 @@ export default class CollabVMServer implements IProtocolMessageHandler {
 
 	constructor(config: IConfig, vm: VM, banmgr: BanManager, auth: AuthManager | null, geoipReader: ReaderModel | null) {
 		this.Config = config;
-		this.ChatHistory = new CircularBuffer<ChatHistory>(Array, this.Config.collabvm.maxChatHistoryLength);
+		this.ChatHistory = new CircularBuffer<ChatHistory>(Array, this.Config.collaborativevm.maxChatHistoryLength);
 		this.TurnQueue = new Queue<User>();
 		this.TurnTime = 0;
 		this.clients = [];
@@ -136,7 +135,7 @@ export default class CollabVMServer implements IProtocolMessageHandler {
 		this.opusEncoder = new OpusEncoder(48000, 2); // initiate opus encoder
 
 		this.indefiniteTurn = null;
-		this.ModPerms = Utilities.MakeModPerms(this.Config.collabvm.moderatorPermissions);
+		this.ModPerms = Utilities.MakeModPerms(this.Config.collaborativevm.modPerms);
 
 		// No size initially, since there usually won't be a display connected at all during initalization
 		this.OnDisplayResized({
@@ -183,10 +182,10 @@ export default class CollabVMServer implements IProtocolMessageHandler {
 
 	public connectionOpened(user: User) {
 		let sameip = this.clients.filter((c) => c.IP.address === user.IP.address);
-		if (sameip.length >= this.Config.collabvm.maxConnections) {
-			// Kick the oldest client
-			// I think this is a better solution than just rejecting the connection
-			sameip[0].kick();
+		if (sameip.length >= this.Config.collaborativevm.maxConnections) {
+			// Kick all clients
+			// TODO: Add this as configurable
+			sameip.forEach((u) => u.kick());
 		}
 		this.clients.push(user);
 
@@ -200,6 +199,7 @@ export default class CollabVMServer implements IProtocolMessageHandler {
 
 		user.socket.on('msg', (buf: Buffer, binary: boolean) => {
 			try {
+				//@ts-ignore
 				user.processMessage(this, buf);
 			} catch (err) {
 				this.logger.error({
@@ -222,6 +222,8 @@ export default class CollabVMServer implements IProtocolMessageHandler {
 			let flags = this.getFlags();
 			user.sendFlag(flags);
 		}
+
+		this.SendFullScreenWithSize(user);
 	}
 
 	private connectionClosed(user: User) {
@@ -353,7 +355,7 @@ export default class CollabVMServer implements IProtocolMessageHandler {
 	}
 
 	onTurnRequest(user: User, forfeit: boolean): void {
-		if ((!this.turnsAllowed || this.Config.collabvm.turnpass !== false) && user.rank !== Rank.Admin && user.rank !== Rank.Moderator && !user.turnWhitelist) return;
+		if ((!this.turnsAllowed || this.Config.collaborativevm.turnpass !== false) && user.rank !== Rank.Admin && user.rank !== Rank.Moderator && !user.turnWhitelist) return;
 
 		if (!this.authCheck(user, this.Config.auth.guestPermissions.turn)) return;
 
@@ -367,11 +369,11 @@ export default class CollabVMServer implements IProtocolMessageHandler {
 			// If they're muted, also ignore the turn request.
 			// Send them the turn queue to prevent client glitches
 			if (user.IP.muted) return;
-			if (this.Config.collabvm.turnlimit !== false) {
+			if (this.Config.collaborativevm.turnlimit !== false) {
 				// Get the amount of users in the turn queue with the same IP as the user requesting a turn.
 				let turns = currentQueue.filter((otheruser) => otheruser.IP.address == user.IP.address);
 				// If it exceeds the limit set in the config, ignore the turn request.
-				if (turns.length + 1 > this.Config.collabvm.turnlimit) return;
+				if (turns.length + 1 > this.Config.collaborativevm.turnlimit) return;
 			}
 			this.TurnQueue.enqueue(user);
 			if (this.TurnQueue.size === 1) this.nextTurn();
@@ -381,14 +383,10 @@ export default class CollabVMServer implements IProtocolMessageHandler {
 		}
 		this.sendTurnUpdate();
 	}
-	
-	onAudioMute(user: User) {
-		user.audioMute = !user.audioMute;
-	}
 
 	onVote(user: User, choice: number): void {
 		if (!this.VM.SnapshotsSupported()) return;
-		if ((!this.turnsAllowed || this.Config.collabvm.turnpass !== false) && user.rank !== Rank.Admin && user.rank !== Rank.Moderator && !user.turnWhitelist) return;
+		if ((!this.turnsAllowed || this.Config.collaborativevm.turnpass !== false) && user.rank !== Rank.Admin && user.rank !== Rank.Moderator && !user.turnWhitelist) return;
 		if (!user.connectedToNode) return;
 		if (!user.VoteRateLimit.request()) return;
 		switch (choice) {
@@ -430,10 +428,10 @@ export default class CollabVMServer implements IProtocolMessageHandler {
 
 	async onList(user: User) {
 		let listEntry: ListEntry = {
-			id: this.Config.collabvm.node,
-			name: this.Config.collabvm.displayname,
+			id: this.Config.collaborativevm.node,
+			name: this.Config.collaborativevm.displayname,
 			thumbnail: this.screenHidden ? this.screenHiddenThumb : await this.getThumbnail(),
-			refreshRate: this.Config.collabvm.cardRefreshRate ? this.Config.collabvm.cardRefreshRate : false
+			refreshRate: this.Config.collaborativevm.cardRefreshRate ? this.Config.collaborativevm.cardRefreshRate : false
 		};
 
 		if (this.VM.GetState() == VMState.Started) {
@@ -442,7 +440,7 @@ export default class CollabVMServer implements IProtocolMessageHandler {
 	}
 
 	private async connectViewShared(user: User, node: string, viewMode: number | undefined) {
-		if (!user.username || node !== this.Config.collabvm.node) {
+		if (!user.username || node !== this.Config.collaborativevm.node) {
 			user.sendConnectFailResponse();
 			return;
 		}
@@ -464,7 +462,7 @@ export default class CollabVMServer implements IProtocolMessageHandler {
 			let history = this.ChatHistory.toArray() as ChatHistory[];
 			user.sendChatHistoryMessage(history);
 		}
-		if (this.Config.collabvm.motd) user.sendChatMessage('', this.Config.collabvm.motd);
+		if (this.Config.collaborativevm.motd) user.sendChatMessage('', this.Config.collaborativevm.motd);
 		if (this.screenHidden) {
 			user?.sendScreenResize(1024, 768);
 			user?.sendScreenUpdate({
@@ -514,7 +512,7 @@ export default class CollabVMServer implements IProtocolMessageHandler {
 
 		var msg = Utilities.HTMLSanitize(message);
 		// One of the things I hated most about the old server is it completely discarded your message if it was too long
-		if (msg.length > this.Config.collabvm.maxChatLength) msg = msg.substring(0, this.Config.collabvm.maxChatLength);
+		if (msg.length > this.Config.collaborativevm.maxChatLength) msg = msg.substring(0, this.Config.collaborativevm.maxChatLength);
 		if (msg.trim().length < 1) return;
 
 		this.clients.forEach((c) => c.sendChatMessage(user.username!, msg));
@@ -539,7 +537,7 @@ export default class CollabVMServer implements IProtocolMessageHandler {
 		var pwdHash = sha256.digest('hex');
 		sha256.destroy();
 
-		if (this.Config.collabvm.turnpass !== false && pwdHash === this.Config.collabvm.turnpass) {
+		if (this.Config.collaborativevm.turnpass !== false && pwdHash === this.Config.collaborativevm.turnpass) {
 			user.turnWhitelist = true;
 			user.sendChatMessage('', 'You may now take turns.');
 			return;
@@ -550,10 +548,10 @@ export default class CollabVMServer implements IProtocolMessageHandler {
 			return;
 		}
 
-		if (pwdHash === this.Config.collabvm.adminpass) {
+		if (pwdHash === this.Config.collaborativevm.adminpass) {
 			user.rank = Rank.Admin;
 			user.sendAdminLoginResponse(true, undefined);
-		} else if (this.Config.collabvm.modpass !== false && pwdHash === this.Config.collabvm.modpass) {
+		} else if (this.Config.collaborativevm.modpass !== false && pwdHash === this.Config.collaborativevm.modpass) {
 			user.rank = Rank.Moderator;
 			user.sendAdminLoginResponse(true, this.ModPerms);
 		} else {
@@ -578,28 +576,28 @@ export default class CollabVMServer implements IProtocolMessageHandler {
 
 	async onAdminMonitor(user: User, node: string, command: string) {
 		if (user.rank !== Rank.Admin) return;
-		if (node !== this.Config.collabvm.node) return;
+		if (node !== this.Config.collaborativevm.node) return;
 		TheAuditLog.onMonitorCommand(user, command);
 		let output = await this.VM.MonitorCommand(command);
 		user.sendAdminMonitorResponse(String(output));
 	}
 
 	onAdminRestore(user: User, node: string): void {
-		if (user.rank !== Rank.Admin && (user.rank !== Rank.Moderator || !this.Config.collabvm.moderatorPermissions.restore)) return;
+		if (user.rank !== Rank.Admin && (user.rank !== Rank.Moderator || !this.Config.collaborativevm.modPerms.restore)) return;
 		TheAuditLog.onReset(user);
 		this.VM.Reset();
 	}
 
 	async onAdminReboot(user: User, node: string) {
-		if (user.rank !== Rank.Admin && (user.rank !== Rank.Moderator || !this.Config.collabvm.moderatorPermissions.reboot)) return;
-		if (node !== this.Config.collabvm.node) return;
+		if (user.rank !== Rank.Admin && (user.rank !== Rank.Moderator || !this.Config.collaborativevm.modPerms.reboot)) return;
+		if (node !== this.Config.collaborativevm.node) return;
 		TheAuditLog.onReboot(user);
 		await this.VM.Reboot();
 	}
 
 	async onAdminBanUser(user: User, username: string) {
 		// Ban
-		if (user.rank !== Rank.Admin && (user.rank !== Rank.Moderator || !this.Config.collabvm.moderatorPermissions.ban)) return;
+		if (user.rank !== Rank.Admin && (user.rank !== Rank.Moderator || !this.Config.collaborativevm.modPerms.ban)) return;
 		let target = this.clients.find((c) => c.username === username);
 		if (!target) return;
 		TheAuditLog.onBan(user, target);
@@ -607,13 +605,13 @@ export default class CollabVMServer implements IProtocolMessageHandler {
 	}
 
 	onAdminForceVote(user: User, choice: number): void {
-		if (user.rank !== Rank.Admin && (user.rank !== Rank.Moderator || !this.Config.collabvm.moderatorPermissions.forcevote)) return;
+		if (user.rank !== Rank.Admin && (user.rank !== Rank.Moderator || !this.Config.collaborativevm.modPerms.forceVote)) return;
 		if (!this.voteInProgress) return;
 		this.endVote(choice == 1);
 	}
 
 	onAdminMuteUser(user: User, username: string, temporary: boolean): void {
-		if (user.rank !== Rank.Admin && (user.rank !== Rank.Moderator || !this.Config.collabvm.moderatorPermissions.mute)) return;
+		if (user.rank !== Rank.Admin && (user.rank !== Rank.Moderator || !this.Config.collaborativevm.modPerms.mute)) return;
 
 		let target = this.clients.find((c) => c.username === username);
 		if (!target) return;
@@ -621,7 +619,7 @@ export default class CollabVMServer implements IProtocolMessageHandler {
 	}
 
 	onAdminKickUser(user: User, username: string): void {
-		if (user.rank !== Rank.Admin && (user.rank !== Rank.Moderator || !this.Config.collabvm.moderatorPermissions.kick)) return;
+		if (user.rank !== Rank.Admin && (user.rank !== Rank.Moderator || !this.Config.collaborativevm.modPerms.kick)) return;
 		var target = this.clients.find((c) => c.username === username);
 		if (!target) return;
 		TheAuditLog.onKick(user, target);
@@ -629,7 +627,7 @@ export default class CollabVMServer implements IProtocolMessageHandler {
 	}
 
 	onAdminEndTurn(user: User, username: string): void {
-		if (user.rank !== Rank.Admin && (user.rank !== Rank.Moderator || !this.Config.collabvm.moderatorPermissions.bypassturn)) return;
+		if (user.rank !== Rank.Admin && (user.rank !== Rank.Moderator || !this.Config.collaborativevm.modPerms.bypassTurn)) return;
 
 		var target = this.clients.find((c) => c.username === username);
 		if (!target) return;
@@ -637,35 +635,35 @@ export default class CollabVMServer implements IProtocolMessageHandler {
 	}
 
 	onAdminClearQueue(user: User, node: string): void {
-		if (user.rank !== Rank.Admin && (user.rank !== Rank.Moderator || !this.Config.collabvm.moderatorPermissions.bypassturn)) return;
-		if (node !== this.Config.collabvm.node) return;
+		if (user.rank !== Rank.Admin && (user.rank !== Rank.Moderator || !this.Config.collaborativevm.modPerms.bypassTurn)) return;
+		if (node !== this.Config.collaborativevm.node) return;
 		this.clearTurns();
 	}
 
 	onAdminRename(user: User, target: string, newName: string): void {
-		if (user.rank !== Rank.Admin && (user.rank !== Rank.Moderator || !this.Config.collabvm.moderatorPermissions.rename)) return;
-		if (this.Config.auth.enabled) {
+		if (user.rank !== Rank.Admin && (user.rank !== Rank.Moderator || !this.Config.collaborativevm.modPerms.rename)) return;
+		var targetUser = this.clients.find((c) => c.username === target);
+		if (this.Config.auth.enabled && targetUser.) {
 			user.sendChatMessage('', 'Cannot rename users on a server that uses authentication.');
 		}
-		var targetUser = this.clients.find((c) => c.username === target);
 		if (!targetUser) return;
 		this.renameUser(targetUser, newName);
 	}
 
 	onAdminGetIP(user: User, username: string): void {
-		if (user.rank !== Rank.Admin && (user.rank !== Rank.Moderator || !this.Config.collabvm.moderatorPermissions.grabip)) return;
+		if (user.rank !== Rank.Admin && (user.rank !== Rank.Moderator || !this.Config.collaborativevm.modPerms.grabIP)) return;
 		let target = this.clients.find((c) => c.username === username);
 		if (!target) return;
 		user.sendAdminIPResponse(username, target.IP.address);
 	}
 
 	onAdminBypassTurn(user: User): void {
-		if (user.rank !== Rank.Admin && (user.rank !== Rank.Moderator || !this.Config.collabvm.moderatorPermissions.bypassturn)) return;
+		if (user.rank !== Rank.Admin && (user.rank !== Rank.Moderator || !this.Config.collaborativevm.modPerms.bypassTurn)) return;
 		this.bypassTurn(user);
 	}
 
 	onAdminRawMessage(user: User, message: string): void {
-		if (user.rank !== Rank.Admin && (user.rank !== Rank.Moderator || !this.Config.collabvm.moderatorPermissions.xss)) return;
+		if (user.rank !== Rank.Admin && (user.rank !== Rank.Moderator || !this.Config.collaborativevm.modPerms.xss)) return;
 		switch (user.rank) {
 			case Rank.Admin:
 				this.clients.forEach((c) => c.sendChatMessage(user.username!, message));
@@ -691,35 +689,30 @@ export default class CollabVMServer implements IProtocolMessageHandler {
 	}
 
 	onAdminIndefiniteTurn(user: User): void {
-		if (user.rank !== Rank.Admin) return;
+		if (user.rank !== Rank.Admin && (user.rank !== Rank.Moderator || !this.Config.collaborativevm.modPerms.indefiniteTurn)) return;
 		this.indefiniteTurn = user;
 		this.TurnQueue = Queue.from([user, ...this.TurnQueue.toArray().filter((c) => c !== user)]);
 		this.sendTurnUpdate();
 	}
 
 	async onAdminHideScreen(user: User, show: boolean) {
-		if (user.rank !== Rank.Admin) return;
+		if (user.rank !== Rank.Admin && (user.rank !== Rank.Moderator || !this.Config.collaborativevm.modPerms.hideScreen)) return;
 		if (show) {
 			// if(!this.screenHidden) return; ?
 
 			this.screenHidden = false;
 			let displaySize = this.VM.GetDisplay()?.Size();
 
-			if(displaySize == undefined)
+			if (displaySize == undefined)
 				return;
 
-			let encoded = await this.MakeRectData({
-				x: 0,
-				y: 0,
-				width: displaySize.width,
-				height: displaySize.height
+			this.clients.forEach(async (client) => {
+				this.SendFullScreenWithSize(client);
 			});
-
-			this.clients.forEach(async (client) => this.SendFullScreenWithSize(client));
 		} else {
 			this.screenHidden = true;
 			this.clients
-				.filter((c) => c.rank == Rank.Unregistered)
+				.filter((c) => c.rank == (Rank.Unregistered || Rank.Registered))
 				.forEach((client) => {
 					client.sendScreenResize(1024, 768);
 					client.sendScreenUpdate({
@@ -731,9 +724,23 @@ export default class CollabVMServer implements IProtocolMessageHandler {
 		}
 	}
 
+	onAdminCutScreen(user: User, target: string): void {
+		if (user.rank !== Rank.Admin && (user.rank !== Rank.Moderator || !this.Config.collaborativevm.modPerms.cutScreen)) return;
+		var targetCli = this.clients.find((c) => c.username === target);
+		targetCli?.sendScreenResize(1, 1); // TODO: check if this useless thingy works
+	}
+
 	onAdminSystemMessage(user: User, message: string): void {
 		if (user.rank !== Rank.Admin) return;
 		this.clients.forEach((c) => c.sendChatMessage('', message));
+	}
+
+	onAdminClearChat(): void {
+		this.ChatHistory.clear();
+		for (let client of this.clients) {
+			client.sendClearChat();
+			client.sendChatMessage('', '[VM] Chat cleared'); //we surely dont push that to the history, thats useless
+		}
 	}
 
 	// end protocol message handlers
@@ -769,7 +776,7 @@ export default class CollabVMServer implements IProtocolMessageHandler {
 			} else if (!/^[a-zA-Z0-9\ \-\_\.]+$/.test(newName) || newName.length > 20 || newName.length < 3) {
 				client.assignGuestName(this.getUsernameList());
 				status = ProtocolRenameStatus.UsernameInvalid;
-			} else if (this.Config.collabvm.usernameblacklist.indexOf(newName) !== -1) {
+			} else if (this.Config.collaborativevm.usernameblacklist.indexOf(newName) !== -1) {
 				client.assignGuestName(this.getUsernameList());
 				status = ProtocolRenameStatus.UsernameNotAllowed;
 			} else client.username = newName;
@@ -825,11 +832,13 @@ export default class CollabVMServer implements IProtocolMessageHandler {
 		return arr;
 	}
 
+	onAudioMute(user: User) { user.audioMute = !user.audioMute }
+
 	private sendTurnUpdate(client?: User) {
 		var turnQueueArr = this.TurnQueue.toArray();
 		var turntime: number;
 		if (this.indefiniteTurn === null) turntime = this.TurnTime * 1000;
-		else turntime = 9999999999;
+		else turntime = 999999999999999.999;
 		var users: string[] = [];
 
 		this.TurnQueue.forEach((c) => users.push(c.username!));
@@ -846,8 +855,8 @@ export default class CollabVMServer implements IProtocolMessageHandler {
 			.forEach((c) => {
 				if (turnQueueArr.indexOf(c) !== -1) {
 					var time;
-					if (this.indefiniteTurn === null) time = this.TurnTime * 1000 + (turnQueueArr.indexOf(c) - 1) * this.Config.collabvm.turnTime * 1000;
-					else time = 9999999999;
+					if (this.indefiniteTurn === null) time = this.TurnTime * 1000 + (turnQueueArr.indexOf(c) - 1) * this.Config.collaborativevm.turnTime * 1000;
+					else time = 999999999999999.999;
 					c.sendTurnQueueWaiting(turntime, users, time);
 				} else {
 					c.sendTurnQueue(turntime, users);
@@ -859,7 +868,7 @@ export default class CollabVMServer implements IProtocolMessageHandler {
 		clearInterval(this.TurnInterval);
 		if (this.TurnQueue.size === 0) {
 		} else {
-			this.TurnTime = this.Config.collabvm.turnTime;
+			this.TurnTime = this.Config.collaborativevm.turnTime;
 			this.TurnInterval = setInterval(() => this.turnInterval(), 1000);
 		}
 		this.sendTurnUpdate();
@@ -987,7 +996,7 @@ export default class CollabVMServer implements IProtocolMessageHandler {
 		if (this.voteInProgress) return;
 		this.voteInProgress = true;
 		this.clients.forEach((c) => c.sendVoteStarted());
-		this.voteTime = this.Config.collabvm.voteTime;
+		this.voteTime = this.Config.collaborativevm.voteTime;
 		this.voteInterval = setInterval(() => {
 			this.voteTime--;
 			if (this.voteTime < 1) {
@@ -1011,7 +1020,7 @@ export default class CollabVMServer implements IProtocolMessageHandler {
 		this.clients.forEach((c) => {
 			c.IP.vote = null;
 		});
-		this.voteCooldown = this.Config.collabvm.voteCooldown;
+		this.voteCooldown = this.Config.collaborativevm.voteCooldown;
 		this.voteCooldownInterval = setInterval(() => {
 			this.voteCooldown--;
 			if (this.voteCooldown < 1) clearInterval(this.voteCooldownInterval);
@@ -1026,11 +1035,6 @@ export default class CollabVMServer implements IProtocolMessageHandler {
 		else this.clients.forEach((c) => c.sendVoteStats(this.voteTime * 1000, count.yes, count.no));
 	}
 
-	// TODO: Handle the audio thingy
-	sendAudioOpus(user: User) {
-
-	}
-
 	getVoteCounts(): VoteTally {
 		let yes = 0;
 		let no = 0;
@@ -1042,20 +1046,21 @@ export default class CollabVMServer implements IProtocolMessageHandler {
 	}
 
 	// Convert 44.1 kHz PCM to 48 kHz PCM or keep 44.1 kHz
+
+
 	private resampleChunk(pcm44: Buffer): Buffer {
-		if (this.Config.qemu.audioFrequency === 48000) {
+		//if (this.Config.qemu.audioFrequency === 48000) {
 			const inBytes = pcm44.length;
 			if (inBytes % 4 !== 0) return Buffer.alloc(0);
-
+			
 			const neededInFrames = 441; // 10 ms @ 44.1 kHz
 			const neededBytes = neededInFrames * 4;
 			if (inBytes < neededBytes) return Buffer.alloc(0);
-
+			
 			const { kernelRadius } = this;
 			const filterWidth = kernelRadius * 2;
-
 			const block44 = pcm44.slice(0, neededBytes);
-
+			
 			const paddedLen = neededInFrames + kernelRadius * 2;
 			const paddedLeft = new Float64Array(paddedLen);
 			const paddedRight = new Float64Array(paddedLen);
@@ -1064,22 +1069,20 @@ export default class CollabVMServer implements IProtocolMessageHandler {
 				paddedRight[i] = this.historyRight[i];
 			}
 
-
 			for (let i = 0; i < neededInFrames; i++) {
 				const b = i * 4;
 				paddedLeft[i + kernelRadius] = block44.readInt16LE(b);
 				paddedRight[i + kernelRadius] = block44.readInt16LE(b + 2);
 			}
-
+			
 			// Last kernelRadius samples remain zero.
 			const window: number[] = new Array(filterWidth + 1);
-
 			for (let n = 0; n <= filterWidth; n++) {
 				window[n] = 0.54 - 0.46 * Math.cos((2 * Math.PI * n) / filterWidth);
 			}
 
 			const sinc = (x: number) => (x === 0 ? 1 : Math.sin(Math.PI * x) / (Math.PI * x));
-
+			
 			const ratio = 48000 / 44100;
 			const outFrames = 480; // 10 ms @ 48 kHz
 			const outBuf = Buffer.alloc(outFrames * 4);
@@ -1087,11 +1090,11 @@ export default class CollabVMServer implements IProtocolMessageHandler {
 			for (let iOut = 0; iOut < outFrames; iOut++) {
 				const center = iOut / ratio + kernelRadius;
 				const baseIndex = Math.floor(center);
-
+				
 				for (let ch = 0; ch < 2; ch++) {
 					const arr = ch === 0 ? paddedLeft : paddedRight;
 					let acc = 0, wSum = 0;
-
+					
 					for (let tap = 0; tap <= filterWidth; tap++) {
 						const tapIndex = baseIndex - kernelRadius + tap;
 						const dist = tapIndex - center;
@@ -1099,33 +1102,33 @@ export default class CollabVMServer implements IProtocolMessageHandler {
 						wSum += coeff;
 						acc += arr[tapIndex] * coeff;
 					}
-
+					
 					const val = wSum !== 0 ? acc / wSum : 0;
 					const clipped = Math.max(-32768, Math.min(32767, Math.round(val)));
 					outBuf.writeInt16LE(clipped, iOut * 4 + ch * 2);
 				}
 			}
-
+			
 			const firstIdxOfLast8 = kernelRadius + neededInFrames - kernelRadius;
 			for (let i = 0; i < kernelRadius; i++) {
 				this.historyLeft[i] = paddedLeft[firstIdxOfLast8 + i];
 				this.historyRight[i] = paddedRight[firstIdxOfLast8 + i];
 			}
 			return outBuf;
-		} else {
-			return pcm44;
-		}
+		/*} else return pcm44;
+		}*/
 	}
 
 	// Accumulate 44.1 kHz data in 441-frame blocks, convert to 480-frame @ 48 kHz, then queue for Opus:
 	private enqueuePCM(pcm44: Buffer) {
+		//@ts-ignore
 		this.partial44Buffer = Buffer.concat([this.partial44Buffer || Buffer.alloc(0), pcm44]);
 		const needed44Bytes = 441 * 4;
-
+		
 		while ((this.partial44Buffer?.length || 0) >= needed44Bytes) {
 			const block44 = this.partial44Buffer.slice(0, needed44Bytes);
 			this.partial44Buffer = this.partial44Buffer.slice(needed44Bytes);
-
+			
 			const pcm48 = this.resampleChunk(block44);
 			if (pcm48.length === 0) continue;
 			
@@ -1153,6 +1156,7 @@ export default class CollabVMServer implements IProtocolMessageHandler {
 				}
 			}
 		}
+
 		this.processingAudio = false;
 	}
 }

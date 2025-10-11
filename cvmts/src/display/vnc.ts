@@ -1,4 +1,4 @@
-import { VncClient } from '@computernewb/nodejs-rfb';
+import { VncClient } from '@wize-logic/nodejs-rfb';
 import { EventEmitter } from 'node:events';
 import { Clamp } from '../Utilities.js';
 import { BatchRects } from './batch.js';
@@ -31,7 +31,9 @@ export class VncDisplay extends EventEmitter implements VMDisplay {
 			VncClient.consts.encodings.pseudoDesktopSize
 			// For now?
 			//VncClient.consts.encodings.pseudoCursor
-		]
+		],
+		audioChannels: 2,
+		audioFrequency: 48000 // TODO: get the frequency from the config
 	});
 
 	private vncShouldReconnect: boolean = false;
@@ -89,7 +91,6 @@ export class VncDisplay extends EventEmitter implements VMDisplay {
 
 			this.emit('frame');
 		});
-
 
 		this.displayVnc.on('audioStream', (pcm: Buffer) => {
 			this.emit('audioStream', pcm);
