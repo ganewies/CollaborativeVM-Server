@@ -25,7 +25,7 @@
 		"format": "prettier -w config.example.toml && yarn workspaces foreach -Apt run format"
 	},
 	"dependencies": {
-		"@wize-logic/nodejs-rfb": "^4.2.0",
-		"send-discord-webhook": "^0.1.2"
+		"@ifiib/webhook": "^1.1.2",
+		"@wize-logic/nodejs-rfb": "^4.2.0"
 	}
 }

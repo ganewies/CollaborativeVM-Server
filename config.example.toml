@@ -155,6 +155,7 @@ isos = ["computernewb.com/isos/*", "/srv/bestvm/isos/*", "crustywindo.ws/collect
 # A Discord webhook status auto-notifier
 [discord.status]
 webhookUrl = "https://discord.com/api/v10/webhooks/WEBHOOK_ID/WEBHOOK_TOKEN"
+# both can be disabled by changing the string to false
 onlineMsg = "hi bestvm is online ;D"
 offlineMsg = "hi bestvm is.. off :("
 # or false

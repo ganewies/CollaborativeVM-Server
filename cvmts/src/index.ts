@@ -19,6 +19,8 @@ import { TheProtocolManager } from './protocol/Manager.js';
 import { GuacamoleProtocol } from './protocol/GuacamoleProtocol.js';
 import { BinRectsProtocol } from './protocol/BinRectsProtocol.js';
 
+import { Client as Webhook } from '@ifiib/webhook';
+
 let logger = pino();
 
 logger.info('CollabVM Server starting up');
@@ -41,21 +43,11 @@ try {
 
 let exiting = false;
 let VM: VM;
+let webhook: Webhook;
 
 async function stop() {
 	if (exiting) return;
-	if (Config.discord.status && Config.discord.status.offlineMsg !== false) {
-		let msg = Config.discord.status.offlineMsg;
-		if (!msg || msg === "") msg = " ";
-
-		let bodyReq = {
-			content: msg
-		}
-		await fetch(Config.discord.status.webhookUrl, {
-			method: 'POST',
-			body: JSON.stringify(bodyReq)
-		}).then(());
-	}
+	if (Config.discord.status && Config.discord.status.offlineMsg !== false) webhook.send({ content: Config.discord.status.offlineMsg });
 	exiting = true;
 	await VM.Stop();
 	process.exit(0);
@@ -67,6 +59,7 @@ async function start() {
 		let downloader = new GeoIPDownloader(Config.geoip.directory, Config.geoip.accountID, Config.geoip.licenseKey);
 		geoipReader = await downloader.getGeoIPReader();
 	}
+	if (Config.discord.status) webhook = new Webhook(Config.discord.status.webhookUrl);
 	// Init the auth manager if enabled
 	let auth = Config.auth.enabled ? new AuthManager(Config.auth.apiEndpoint, Config.auth.secretKey) : null;
 	// Database and ban manager
@@ -82,17 +75,7 @@ async function start() {
 		db = new Database(Config.mysql);
 		await db.init();
 	}
-	if (Config.discord.status && Config.discord.status.onlineMsg !== false) {
-		let msg = Config.discord.status.onlineMsg;
-
-		let bodyReq = {
-			content: msg
-		}
-		await fetch(Config.discord.status.webhookUrl, {
-			method: 'POST',
-			body: JSON.stringify(bodyReq)
-		});
-	}
+	if (Config.discord.status && Config.discord.status.onlineMsg !== false) webhook.send({ content: Config.discord.status.onlineMsg });
 	let banmgr = new BanManager(Config.bans, db);
 	switch (Config.vm.type) {
 		case 'qemu': {
@@ -100,7 +83,7 @@ async function start() {
 			if (Config.qemu.audioEnabled) {
 				const { audioId, audioFrequency, audioDevice } = Config.qemu;
 				
-				if (audioDevice === "hda-duplex") Config.qemu.qemuArgs += " -device ich9-intel-hda";
+				if (audioDevice === "hda-duplex") Config.qemu.qemuArgs += " -device ich9-intel-hda"; // else kaboom
 				Config.qemu.qemuArgs +=
 					` -audiodev none,id=${audioId},out.frequency=${audioFrequency},in.frequency=${audioFrequency}` +
 					` -device ${audioDevice},audiodev=${audioId}`;

@@ -19,7 +19,7 @@ export default interface IConfig {
 		enabled: boolean;
 		apiEndpoint: string;
 		secretKey: string;
-		guestPermissions: {
+		guestPermissions: { // TODO: change this freaky name from guestPermissions to guestPerms
 			chat: boolean;
 			turn: boolean;
 			callForReset: boolean;
