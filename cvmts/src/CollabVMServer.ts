@@ -432,7 +432,7 @@ export default class CollabVMServer implements IProtocolMessageHandler {
 			id: this.Config.collaborativevm.node,
 			name: this.Config.collaborativevm.displayname,
 			thumbnail: this.screenHidden ? this.screenHiddenThumb : await this.getThumbnail(),
-			refreshRate: this.Config.collaborativevm.cardRefreshRate ? this.Config.collaborativevm.cardRefreshRate : false
+			refreshRate: this.Config.collaborativevm.cardRefreshRate ? this.Config.collaborativevm.cardRefreshRate * 1000 : 2300
 		};
 
 		if (this.VM.GetState() == VMState.Started) {

@@ -105,4 +105,5 @@ export interface Permissions {
 	xss: boolean;
 	hideScreen: boolean;
 	cutScreen: boolean;
+	clearChat: boolean;
 }

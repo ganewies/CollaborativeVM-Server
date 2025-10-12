@@ -88,6 +88,8 @@ async function start() {
 					` -audiodev none,id=${audioId},out.frequency=${audioFrequency},in.frequency=${audioFrequency}` +
 					` -device ${audioDevice},audiodev=${audioId}`;
 			}
+			// da usb tablet
+			Config.qemu.qemuArgs += " -device qemu-xhci -device usb-tablet"
 
 			// Fire up the VM
 			let def: QemuVmDefinition = {
