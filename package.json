@@ -23,9 +23,5 @@
 		"serve": "node cvmts/dist/index.js",
 		"clean": "npx rimraf .parcel-cache .yarn **/node_modules **/dist cvm-rs/target cvm-rs/index.node",
 		"format": "prettier -w config.example.toml && yarn workspaces foreach -Apt run format"
-	},
-	"dependencies": {
-		"@ifiib/webhook": "^1.1.2",
-		"@wize-logic/nodejs-rfb": "^4.2.0"
 	}
 }
